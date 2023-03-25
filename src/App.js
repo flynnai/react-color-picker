@@ -1,9 +1,12 @@
-import './App.css';
+import styles from "./App.module.scss";
+import ColorPicker from "./ColorPicker";
 
 function App() {
-  return (
-    <div>asdf</div>
-  );
+    return (
+        <div>
+            <ColorPicker />
+        </div>
+    );
 }
 
 export default App;
