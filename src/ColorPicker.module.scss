@@ -17,6 +17,7 @@
         display: flex;
         flex-flow: column nowrap;
         .colorSquare {
+            cursor: pointer;
             width: 100%;
             aspect-ratio: 1/1;
             position: relative;
@@ -44,6 +45,8 @@
                 );
             }
             .knob {
+                cursor: grab;
+
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -66,6 +69,8 @@
 
         .hueSliderThumb,
         .alphaSliderThumb {
+            cursor: grab;
+
             margin-left: calc($slider-thumb-border-size * -1);
             margin-top: calc($slider-thumb-border-size * -1);
             width: $slider-thumb-width;
@@ -79,6 +84,7 @@
         .hueWrapper {
             .hueSlider {
                 border-radius: $color-square-border-radius * 0.5;
+                cursor: pointer;
 
                 width: 100%;
                 height: calc(
@@ -102,6 +108,7 @@
             position: relative;
             .alphaSlider {
                 border-radius: $color-square-border-radius * 0.5;
+                cursor: pointer;
 
                 width: 100%;
                 height: calc(
