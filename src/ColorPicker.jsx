@@ -31,35 +31,16 @@ const hslToRgb = (h, s, l) => {
     };
 };
 
-const getKnobColor = (hue, x, y) => {
-    let knobColor = hslToRgb(hue / 360, 1, 0.5);
-    const whiteWeight = (100 - x) / 100;
-    const blackWeight = (100 - y) / 100;
-    const weightedAvg = (weight, a, b) => weight * a + (1 - weight) * b;
-    knobColor.r = Math.floor(
-        weightedAvg(
-            blackWeight,
-            0x00,
-            weightedAvg(whiteWeight, 0xff, knobColor.r)
-        )
-    );
-    knobColor.g = Math.floor(
-        weightedAvg(
-            blackWeight,
-            0x00,
-            weightedAvg(whiteWeight, 0xff, knobColor.g)
-        )
-    );
-    knobColor.b = Math.floor(
-        weightedAvg(
-            blackWeight,
-            0x00,
-            weightedAvg(whiteWeight, 0xff, knobColor.b)
-        )
-    );
-
-    return knobColor;
-};
+// for `h` in [0,360], `s` in [0,1, `v` in [0,1]
+function hsv2rgb(h, s, v) {
+    let f = (n, k = (n + h / 60) % 6) =>
+        v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
+    return {
+        r: Math.round(f(5) * 255),
+        g: Math.round(f(3) * 255),
+        b: Math.round(f(1) * 255),
+    };
+}
 
 function ColorPicker() {
     const [selectedHue, setSelectedHue] = useState(0);
@@ -118,7 +99,11 @@ function ColorPicker() {
         }
     }, []);
 
-    const knobColor = getKnobColor(selectedHue, knobPosition.x, knobPosition.y);
+    const knobColor = hsv2rgb(
+        selectedHue,
+        knobPosition.x / 100,
+        knobPosition.y / 100
+    );
 
     return (
         <div className={styles.main}>
@@ -161,8 +146,7 @@ function ColorPicker() {
                 <div
                     className={styles.alphaGradient}
                     style={{
-                        background:
-                            "linear-gradient(to right, transparent, black)",
+                        background: `linear-gradient(to right, transparent, hsl(${selectedHue}, 100%, 50%))`,
                     }}
                 ></div>
                 <ReactSlider
