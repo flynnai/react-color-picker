@@ -110,12 +110,16 @@ function HexInput({ value, setValue, setAlpha, hexInputRef }) {
     );
 }
 
-function ColorPicker() {
-    const [selectedHue, setSelectedHue] = useState(0);
-    const [selectedAlpha, setSelectedAlpha] = useState(0);
+function ColorPicker({ width, color, setColor }) {
+    const initColor = rgb2hsv(color.r, color.g, color.b);
+    const [selectedHue, setSelectedHue] = useState(initColor.h);
+    const [selectedAlpha, setSelectedAlpha] = useState(color.a);
     const colorSquareRef = useRef(null);
     const hexInputRef = useRef(null);
-    const [knobPosition, setKnobPosition] = useState({ x: 0, y: 0 }); // as percent
+    const [knobPosition, setKnobPosition] = useState({
+        x: initColor.s * 100,
+        y: initColor.v * 100,
+    }); // as percent
     const [justCopied, setJustCopied] = useState(false);
 
     useEffect(() => {
@@ -176,6 +180,12 @@ function ColorPicker() {
         knobPosition.y / 100
     );
 
+    // Update controlled state on interior state change
+    useEffect(() => {
+        const { r, g, b } = knobColor;
+        setColor({ r, g, b, a: selectedAlpha });
+    }, [knobColor.r, knobColor.g, knobColor.b, selectedAlpha]);
+
     const handleHexInputChange = (newVal) => {
         const { r, g, b } = hex2rgb(newVal);
         const { h, s, v } = rgb2hsv(r, g, b);
@@ -208,7 +218,7 @@ function ColorPicker() {
     };
 
     return (
-        <div className={styles.main}>
+        <div className={styles.main} style={{ width }}>
             <div className={styles.topRow}>
                 <div
                     className={styles.colorSquare}
