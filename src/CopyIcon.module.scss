@@ -1,0 +1,56 @@
+.main {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1/1;
+    .square {
+        transition: top 0.4s, left 0.4s;
+        position: absolute;
+        left: 10%;
+        top: 10%;
+        width: 80%;
+        aspect-ratio: 1/1;
+        background-color: white;
+        border-radius: 0.2em;
+    }
+
+    .square::before {
+        transition: top 0.4s, left 0.4s;
+        content: "";
+
+        position: absolute;
+        left: 10%;
+        top: 10%;
+        width: 100%;
+        aspect-ratio: 1/1;
+        background-color: #ccc;
+        border-radius: 0.2em;
+    }
+
+    &::before {
+        transition: top 0.4s, left 0.4s;
+        content: "";
+
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80%;
+        aspect-ratio: 1/1;
+        background-color: #ccc;
+        border-radius: 0.2em;
+    }
+
+    &:hover {
+        .square {
+            left: 15%;
+            top: 15%;
+        }
+        .square::before {
+            left: 7%;
+            top: 7%;
+        }
+        &::before {
+            left: -7%;
+            top: -7%;
+        }
+    }
+}

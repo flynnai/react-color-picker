@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./ColorPicker.module.scss";
 import ReactSlider from "react-slider";
+import CopyIcon from "./CopyIcon";
 
+// credit for these two: https://stackoverflow.com/a/54070620/12339112
 // for `h` in [0,360], `s` in [0,1, `v` in [0,1]
 const hsv2rgb = (h, s, v) => {
     let f = (n, k = (n + h / 60) % 6) =>
@@ -13,10 +15,98 @@ const hsv2rgb = (h, s, v) => {
     };
 };
 
+// for r,g,b in [0, 255], gives h in [0,360) and s,v in [0,1]
+const rgb2hsv = (r, g, b) => {
+    r /= 0xff;
+    g /= 0xff;
+    b /= 0xff;
+    let v = Math.max(r, g, b),
+        c = v - Math.min(r, g, b);
+    let h =
+        c &&
+        (v == r ? (g - b) / c : v == g ? 2 + (b - r) / c : 4 + (r - g) / c);
+    return {
+        h: 60 * (h < 0 ? h + 6 : h),
+        s: v && c / v,
+        v,
+    };
+};
+
 const rgb2Hex = (r, g, b) =>
     `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b
         .toString(16)
         .padStart(2, "0")}`;
+
+const hex2rgb = (hex) => ({
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+});
+
+const joinClasses = (...args) => args.filter(Boolean).join(" ");
+
+function HexInput({ value, setValue, setAlpha }) {
+    const [isInvalid, setIsInvalid] = useState(false);
+    const [draft, setDraft] = useState(value);
+
+    useEffect(() => {
+        setDraft(value);
+        setIsInvalid(false);
+    }, [value]);
+
+    const validateDraft = (e) => {
+        let newVal = e.target.value;
+        // already uppercased
+        newVal = newVal.replaceAll(/[^0-9A-F]/g, "");
+        if (newVal.length === 3 || newVal.length === 4) {
+            // expand out
+            newVal = Array.from(newVal)
+                .map((c) => c + c)
+                .join("");
+        }
+
+        if (newVal.length === 8) {
+            let newAlpha = parseInt(newVal.slice(6), 16);
+            setAlpha(newAlpha);
+            newVal = newVal.slice(0, 6);
+        }
+
+        if (newVal.length !== 6) {
+            setIsInvalid(true);
+            return;
+        }
+        newVal = "#" + newVal;
+
+        setValue(newVal);
+        setDraft(newVal);
+        setIsInvalid(false);
+    };
+
+    const handleChange = (e) => {
+        let newVal = e.target.value;
+        newVal = newVal.toUpperCase();
+        setDraft(newVal);
+    };
+
+    const selectAll = (e) => {
+        e.target.setSelectionRange(0, e.target.value.length);
+    };
+
+    return (
+        <input
+            type="text"
+            value={draft}
+            onChange={handleChange}
+            onFocus={selectAll}
+            className={joinClasses(
+                styles.hexInput,
+                isInvalid && styles.invalid
+            )}
+            placeholder="#xxxxxx"
+            onBlur={validateDraft}
+        ></input>
+    );
+}
 
 function ColorPicker() {
     const [selectedHue, setSelectedHue] = useState(0);
@@ -82,6 +172,16 @@ function ColorPicker() {
         knobPosition.y / 100
     );
 
+    const handleHexInputChange = (newVal) => {
+        console.log("New val is ", newVal);
+        const { r, g, b } = hex2rgb(newVal);
+        console.log("RGB ", r, g, b);
+        const { h, s, v } = rgb2hsv(r, g, b);
+        console.log("HSV ", h, s, v);
+        setKnobPosition({ x: s * 100, y: v * 100 });
+        setSelectedHue(h);
+    };
+
     return (
         <div className={styles.main}>
             <div className={styles.topRow}>
@@ -141,15 +241,20 @@ function ColorPicker() {
                 </div>
             </div>
             <div className={styles.bottomRow}>
-                <input
-                    type="text"
-                    value={rgb2Hex(
-                        knobColor.r,
-                        knobColor.g,
-                        knobColor.b
-                    ).toUpperCase()}
-                    className={styles.hexInput}
-                ></input>
+                <div className={styles.inputWrapper}>
+                    <HexInput
+                        value={rgb2Hex(
+                            knobColor.r,
+                            knobColor.g,
+                            knobColor.b
+                        ).toUpperCase()}
+                        setValue={handleHexInputChange}
+                        setAlpha={setSelectedAlpha}
+                    />
+                    <div style={{ width: "1rem" }}>
+                        <CopyIcon />
+                    </div>
+                </div>
             </div>
         </div>
     );
