@@ -17,6 +17,8 @@ function ColorPicker({ width, value: initValue, onChange: componentOnChange }) {
         y: initColorHsv.v * 100,
     }); // as percent
     const [justCopied, setJustCopied] = useState(false);
+    const [isKnobGrabbed, setIsKnobGrabbed] = useState(false);
+    const lastUpdatedValueRef = useRef(null);
 
     useEffect(() => {
         const colorSquare = colorSquareRef.current;
@@ -55,8 +57,13 @@ function ColorPicker({ width, value: initValue, onChange: componentOnChange }) {
             const mouseDownHandler = (e) => {
                 isMouseDown = true;
                 updateKnobPosition(e);
+                setIsKnobGrabbed(true);
             };
             const mouseUpHandler = (e) => {
+                if (isMouseDown) {
+                    // drag started on this color square
+                    setIsKnobGrabbed(false);
+                }
                 isMouseDown = false;
             };
             window.addEventListener("mousemove", mouseMoveHandler);
@@ -76,19 +83,21 @@ function ColorPicker({ width, value: initValue, onChange: componentOnChange }) {
         knobPosition.y / 100
     );
 
-    // Update controlled state on interior state change
-    useEffect(() => {
-        const { r, g, b } = knobColor;
-        componentOnChange({ r, g, b, a: selectedAlpha });
-    }, [knobColor.r, knobColor.g, knobColor.b, selectedAlpha]);
-
     // Update self if input value changed
     useEffect(() => {
-        setSelectedAlpha(initValue.a);
-        const { h, s, v } = rgb2hsv(initValue.r, initValue.g, initValue.b);
-        setSelectedHue(h);
-        setKnobPosition({ x: s * 100, y: v * 100 });
+        if (lastUpdatedValueRef.current !== initValue) {
+            setSelectedAlpha(initValue.a);
+            const { h, s, v } = rgb2hsv(initValue.r, initValue.g, initValue.b);
+            setSelectedHue(h);
+            setKnobPosition({ x: s * 100, y: v * 100 });
+        }
     }, [initValue]);
+
+    useEffect(() => {
+        if (!isKnobGrabbed) {
+            updateParentComponentState();
+        }
+    }, [isKnobGrabbed]);
 
     const handleHexInputChange = (newVal) => {
         const { r, g, b } = hex2rgb(newVal);
@@ -102,11 +111,11 @@ function ColorPicker({ width, value: initValue, onChange: componentOnChange }) {
         }
         setKnobPosition({ x: s * 100, y: v * 100 });
         // edge case: if new value is gray, ignore hue change
-        if (r === g && g === b) {
-            // ignore hue change
-            return;
+        if (!(r === g && g === b)) {
+            setSelectedHue(h);
         }
-        setSelectedHue(h);
+
+        updateParentComponentState(r, g, b, selectedAlpha);
     };
 
     const copyColorToClipboard = () => {
@@ -119,6 +128,22 @@ function ColorPicker({ width, value: initValue, onChange: componentOnChange }) {
                 setJustCopied(false);
             }, 2500);
         }
+    };
+
+    const updateParentComponentState = (
+        r = knobColor.r,
+        g = knobColor.g,
+        b = knobColor.b,
+        a = selectedAlpha
+    ) => {
+        const newVal = {
+            r,
+            g,
+            b,
+            a,
+        };
+        componentOnChange(newVal);
+        lastUpdatedValueRef.current = newVal;
     };
 
     return (
@@ -166,6 +191,9 @@ function ColorPicker({ width, value: initValue, onChange: componentOnChange }) {
                                 onChange={(value, index) =>
                                     setSelectedHue(parseInt(value))
                                 }
+                                onAfterChange={() =>
+                                    updateParentComponentState()
+                                }
                             />
                         </div>
                         <div className={styles.alphaWrapper}>
@@ -185,6 +213,9 @@ function ColorPicker({ width, value: initValue, onChange: componentOnChange }) {
                                 value={selectedAlpha}
                                 onChange={(value, index) =>
                                     setSelectedAlpha(parseInt(value))
+                                }
+                                onAfterChange={() =>
+                                    updateParentComponentState()
                                 }
                             />
                         </div>
