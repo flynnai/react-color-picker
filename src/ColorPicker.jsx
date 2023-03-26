@@ -143,12 +143,14 @@ function ColorPicker() {
                 />
             </div>
             <div className={styles.alphaWrapper}>
+                <div className={styles.alphaCheckers}></div>
                 <div
                     className={styles.alphaGradient}
                     style={{
                         background: `linear-gradient(to right, transparent, hsl(${selectedHue}, 100%, 50%))`,
                     }}
                 ></div>
+
                 <ReactSlider
                     className={styles.alphaSlider}
                     thumbClassName={styles.alphaSliderThumb}

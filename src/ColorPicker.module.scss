@@ -60,6 +60,25 @@
             // background-color: black;
         }
 
+        .alphaCheckers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            $checker-size: calc(
+                $slider-thumb-height - $slider-thumb-border-size * 2
+            );
+            background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #ccc 75%),
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: $checker-size $checker-size;
+            background-position: 0 0, 0 calc($checker-size / 2),
+                calc($checker-size / 2) calc($checker-size / -2),
+                calc($checker-size / -2) 0px;
+        }
+
         .alphaGradient {
             position: absolute;
             width: 100%;
