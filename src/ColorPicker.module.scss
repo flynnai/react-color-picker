@@ -23,14 +23,23 @@
             position: absolute;
             top: 0;
             left: 0;
-            transition: top 0.1s, left 0.1s;
+            $knob-size: 20px;
+            width: $knob-size;
+            height: $knob-size;
+            border-radius: 500px;
+            margin-top: calc($knob-size / -2);
+            margin-left: calc($knob-size / -2);
+            z-index: 1;
+
+            border: 2px solid;
         }
     }
+    $slider-thumb-width: 15px;
+    $slider-thumb-height: 20px;
+    $slider-thumb-border-size: 2px;
+
     .hueWrapper {
         .hueSlider {
-            appearance: none;
-            outline: none;
-            width: 100%;
             background-image: linear-gradient(
                 to right,
                 red 0%,
@@ -45,10 +54,36 @@
     }
 
     .alphaWrapper {
+        position: relative;
         .alphaSlider {
-            appearance: none;
-            outline: none;
-            width: 100%;
+            // background-color: black;
         }
+
+        .alphaGradient {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            // background: linear-gradient(to right, transparent, black);
+        }
+    }
+
+    .alphaSlider,
+    .hueSlider {
+        width: 100%;
+        height: calc($slider-thumb-height - $slider-thumb-border-size * 2);
+    }
+
+    .hueSliderThumb,
+    .alphaSliderThumb {
+        margin-left: calc($slider-thumb-border-size * -1);
+        margin-top: calc($slider-thumb-border-size * -1);
+        width: $slider-thumb-width;
+        height: $slider-thumb-height;
+        border: $slider-thumb-border-size solid black;
+        outline: none;
+        box-sizing: border-box;
+        border-radius: 3px;
     }
 }
