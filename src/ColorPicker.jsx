@@ -3,7 +3,7 @@ import styles from "./ColorPicker.module.scss";
 import ReactSlider from "react-slider";
 
 // for `h` in [0,360], `s` in [0,1, `v` in [0,1]
-function hsv2rgb(h, s, v) {
+const hsv2rgb = (h, s, v) => {
     let f = (n, k = (n + h / 60) % 6) =>
         v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
     return {
@@ -11,7 +11,12 @@ function hsv2rgb(h, s, v) {
         g: Math.round(f(3) * 255),
         b: Math.round(f(1) * 255),
     };
-}
+};
+
+const rgb2Hex = (r, g, b) =>
+    `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b
+        .toString(16)
+        .padStart(2, "0")}`;
 
 function ColorPicker() {
     const [selectedHue, setSelectedHue] = useState(0);
@@ -135,7 +140,17 @@ function ColorPicker() {
                     />
                 </div>
             </div>
-            <div className={styles.bottomRow}></div>
+            <div className={styles.bottomRow}>
+                <input
+                    type="text"
+                    value={rgb2Hex(
+                        knobColor.r,
+                        knobColor.g,
+                        knobColor.b
+                    ).toUpperCase()}
+                    className={styles.hexInput}
+                ></input>
+            </div>
         </div>
     );
 }
