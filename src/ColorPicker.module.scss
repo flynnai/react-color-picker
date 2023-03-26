@@ -185,21 +185,7 @@
             flex-flow: row nowrap;
             max-width: $base-unit * 300;
             width: 100%;
-            .hexInput {
-                font-family: "Courier New", monospace;
-                font-weight: bold;
 
-                border: 2px solid black;
-                border-radius: $color-square-border-radius * 0.5;
-                padding: $base-unit * 3;
-                &.invalid {
-                    border-color: red;
-                }
-
-                outline: none;
-                transition: border-color 0.4s;
-                width: 100%;
-            }
             .copyIconWrapper {
                 cursor: pointer;
                 position: absolute;

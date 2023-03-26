@@ -1,0 +1,15 @@
+.hexInput {
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 3px;
+    &.invalid {
+        border-color: red;
+    }
+
+    outline: none;
+    transition: border-color 0.4s;
+    width: 100%;
+}

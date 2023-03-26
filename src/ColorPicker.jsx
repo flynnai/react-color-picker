@@ -3,122 +3,18 @@ import styles from "./ColorPicker.module.scss";
 import ReactSlider from "react-slider";
 import CopyIcon from "./CopyIcon";
 import { ReactComponent as CheckMark } from "./circleGreenCheckMark.svg";
+import HexInput from "./HexInput";
+import { hex2rgb, hsv2rgb, rgb2Hex, rgb2hsv } from "./utils";
 
-// credit for these two: https://stackoverflow.com/a/54070620/12339112
-// for `h` in [0,360], `s` in [0,1, `v` in [0,1]
-const hsv2rgb = (h, s, v) => {
-    let f = (n, k = (n + h / 60) % 6) =>
-        v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
-    return {
-        r: Math.round(f(5) * 255),
-        g: Math.round(f(3) * 255),
-        b: Math.round(f(1) * 255),
-    };
-};
-
-// for r,g,b in [0, 255], gives h in [0,360) and s,v in [0,1]
-const rgb2hsv = (r, g, b) => {
-    r /= 0xff;
-    g /= 0xff;
-    b /= 0xff;
-    let v = Math.max(r, g, b),
-        c = v - Math.min(r, g, b);
-    let h =
-        c &&
-        (v === r ? (g - b) / c : v === g ? 2 + (b - r) / c : 4 + (r - g) / c);
-    return {
-        h: 60 * (h < 0 ? h + 6 : h),
-        s: v && c / v,
-        v,
-    };
-};
-
-const rgb2Hex = (r, g, b) =>
-    `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b
-        .toString(16)
-        .padStart(2, "0")}`;
-
-const hex2rgb = (hex) => ({
-    r: parseInt(hex.slice(1, 3), 16),
-    g: parseInt(hex.slice(3, 5), 16),
-    b: parseInt(hex.slice(5, 7), 16),
-});
-
-const joinClasses = (...args) => args.filter(Boolean).join(" ");
-
-function HexInput({ value, setValue, setAlpha, hexInputRef }) {
-    const [isInvalid, setIsInvalid] = useState(false);
-    const [draft, setDraft] = useState(value);
-
-    useEffect(() => {
-        setDraft(value);
-        setIsInvalid(false);
-    }, [value]);
-
-    const validateDraft = (e) => {
-        let newVal = e.target.value;
-        // already uppercased
-        newVal = newVal.replaceAll(/[^0-9A-F]/g, "");
-        if (newVal.length === 3 || newVal.length === 4) {
-            // expand out
-            newVal = Array.from(newVal)
-                .map((c) => c + c)
-                .join("");
-        }
-
-        if (newVal.length === 8) {
-            let newAlpha = parseInt(newVal.slice(6), 16);
-            setAlpha(newAlpha);
-            newVal = newVal.slice(0, 6);
-        }
-
-        if (newVal.length !== 6) {
-            setIsInvalid(true);
-            return;
-        }
-        newVal = "#" + newVal;
-
-        setValue(newVal);
-        setDraft(newVal);
-        setIsInvalid(false);
-    };
-
-    const handleChange = (e) => {
-        let newVal = e.target.value;
-        newVal = newVal.toUpperCase();
-        setDraft(newVal);
-    };
-
-    const selectAll = (e) => {
-        e.target.setSelectionRange(0, e.target.value.length);
-    };
-
-    return (
-        <input
-            type="text"
-            value={draft}
-            onChange={handleChange}
-            onFocus={selectAll}
-            className={joinClasses(
-                styles.hexInput,
-                isInvalid && styles.invalid
-            )}
-            placeholder="#xxxxxx"
-            onBlur={validateDraft}
-            ref={hexInputRef}
-        ></input>
-    );
-}
-
-function ColorPicker({ width, color, setColor }) {
-    const initColor = rgb2hsv(color.r, color.g, color.b);
-    const [selectedHue, setSelectedHue] = useState(initColor.h);
-    const [selectedAlpha, setSelectedAlpha] = useState(color.a);
+function ColorPicker({ width, value: initValue, onChange: componentOnChange }) {
+    const initColorHsv = rgb2hsv(initValue.r, initValue.g, initValue.b);
+    const [selectedHue, setSelectedHue] = useState(initColorHsv.h);
+    const [selectedAlpha, setSelectedAlpha] = useState(initValue.a);
     const colorSquareRef = useRef(null);
     const hexInputRef = useRef(null);
     const [knobPosition, setKnobPosition] = useState({
-        x: initColor.s * 100,
-        y: initColor.v * 100,
+        x: initColorHsv.s * 100,
+        y: initColorHsv.v * 100,
     }); // as percent
     const [justCopied, setJustCopied] = useState(false);
 
@@ -183,8 +79,16 @@ function ColorPicker({ width, color, setColor }) {
     // Update controlled state on interior state change
     useEffect(() => {
         const { r, g, b } = knobColor;
-        setColor({ r, g, b, a: selectedAlpha });
+        componentOnChange({ r, g, b, a: selectedAlpha });
     }, [knobColor.r, knobColor.g, knobColor.b, selectedAlpha]);
+
+    // Update self if input value changed
+    useEffect(() => {
+        setSelectedAlpha(initValue.a);
+        const { h, s, v } = rgb2hsv(initValue.r, initValue.g, initValue.b);
+        setSelectedHue(h);
+        setKnobPosition({ x: s * 100, y: v * 100 });
+    }, [initValue]);
 
     const handleHexInputChange = (newVal) => {
         const { r, g, b } = hex2rgb(newVal);
