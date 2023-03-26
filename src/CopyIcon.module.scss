@@ -2,8 +2,12 @@
     position: relative;
     width: 100%;
     aspect-ratio: 1/1;
+    $animation-speed: 0.2s;
+
+    animation: fade-in 0.3s;
+
     .square {
-        transition: top 0.4s, left 0.4s;
+        transition: left $animation-speed, top $animation-speed;
         position: absolute;
         left: 10%;
         top: 10%;
@@ -14,7 +18,7 @@
     }
 
     .square::before {
-        transition: top 0.4s, left 0.4s;
+        transition: left $animation-speed, top $animation-speed;
         content: "";
 
         position: absolute;
@@ -22,12 +26,12 @@
         top: 10%;
         width: 100%;
         aspect-ratio: 1/1;
-        background-color: #ccc;
+        background-color: #bbb;
         border-radius: 0.2em;
     }
 
     &::before {
-        transition: top 0.4s, left 0.4s;
+        transition: left $animation-speed, top $animation-speed;
         content: "";
 
         position: absolute;
@@ -35,7 +39,7 @@
         top: 0;
         width: 80%;
         aspect-ratio: 1/1;
-        background-color: #ccc;
+        background-color: #bbb;
         border-radius: 0.2em;
     }
 
@@ -52,5 +56,14 @@
             left: -7%;
             top: -7%;
         }
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }

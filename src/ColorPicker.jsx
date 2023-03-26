@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./ColorPicker.module.scss";
 import ReactSlider from "react-slider";
 import CopyIcon from "./CopyIcon";
+import { ReactComponent as CheckMark } from "./circleGreenCheckMark.svg";
 
 // credit for these two: https://stackoverflow.com/a/54070620/12339112
 // for `h` in [0,360], `s` in [0,1, `v` in [0,1]
@@ -24,7 +25,7 @@ const rgb2hsv = (r, g, b) => {
         c = v - Math.min(r, g, b);
     let h =
         c &&
-        (v == r ? (g - b) / c : v == g ? 2 + (b - r) / c : 4 + (r - g) / c);
+        (v === r ? (g - b) / c : v === g ? 2 + (b - r) / c : 4 + (r - g) / c);
     return {
         h: 60 * (h < 0 ? h + 6 : h),
         s: v && c / v,
@@ -45,7 +46,7 @@ const hex2rgb = (hex) => ({
 
 const joinClasses = (...args) => args.filter(Boolean).join(" ");
 
-function HexInput({ value, setValue, setAlpha }) {
+function HexInput({ value, setValue, setAlpha, hexInputRef }) {
     const [isInvalid, setIsInvalid] = useState(false);
     const [draft, setDraft] = useState(value);
 
@@ -104,6 +105,7 @@ function HexInput({ value, setValue, setAlpha }) {
             )}
             placeholder="#xxxxxx"
             onBlur={validateDraft}
+            ref={hexInputRef}
         ></input>
     );
 }
@@ -112,7 +114,9 @@ function ColorPicker() {
     const [selectedHue, setSelectedHue] = useState(0);
     const [selectedAlpha, setSelectedAlpha] = useState(0);
     const colorSquareRef = useRef(null);
+    const hexInputRef = useRef(null);
     const [knobPosition, setKnobPosition] = useState({ x: 0, y: 0 }); // as percent
+    const [justCopied, setJustCopied] = useState(false);
 
     useEffect(() => {
         const colorSquare = colorSquareRef.current;
@@ -173,13 +177,34 @@ function ColorPicker() {
     );
 
     const handleHexInputChange = (newVal) => {
-        console.log("New val is ", newVal);
         const { r, g, b } = hex2rgb(newVal);
-        console.log("RGB ", r, g, b);
         const { h, s, v } = rgb2hsv(r, g, b);
-        console.log("HSV ", h, s, v);
+
+        let prevHex = rgb2Hex(knobColor.r, knobColor.g, knobColor.b);
+        let newHex = rgb2Hex(r, g, b);
+
+        if (prevHex === newHex) {
+            return;
+        }
         setKnobPosition({ x: s * 100, y: v * 100 });
+        // edge case: if new value is gray, ignore hue change
+        if (r === g && g === b) {
+            // ignore hue change
+            return;
+        }
         setSelectedHue(h);
+    };
+
+    const copyColorToClipboard = () => {
+        const input = hexInputRef.current;
+        if (input) {
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            setJustCopied(true);
+            setTimeout(() => {
+                setJustCopied(false);
+            }, 2500);
+        }
     };
 
     return (
@@ -207,37 +232,49 @@ function ColorPicker() {
                     <div className={styles.whiteGradient}></div>
                     <div className={styles.blackGradient}></div>
                 </div>
-                <div className={styles.hueWrapper}>
-                    <ReactSlider
-                        className={styles.hueSlider}
-                        thumbClassName={styles.hueSliderThumb}
-                        min={0}
-                        max={359}
-                        value={selectedHue}
-                        onChange={(value, index) =>
-                            setSelectedHue(parseInt(value))
-                        }
-                    />
-                </div>
-                <div className={styles.alphaWrapper}>
-                    <div className={styles.alphaCheckers}></div>
-                    <div
-                        className={styles.alphaGradient}
-                        style={{
-                            background: `linear-gradient(to right, transparent, hsl(${selectedHue}, 100%, 50%))`,
-                        }}
-                    ></div>
+                <div className={styles.slidersRow}>
+                    <div className={styles.colorPreviewWrapper}>
+                        <div
+                            className={styles.colorPreview}
+                            style={{
+                                backgroundColor: `rgb(${knobColor.r}, ${knobColor.g}, ${knobColor.b})`,
+                            }}
+                        ></div>
+                    </div>
+                    <div className={styles.slidersWrapper}>
+                        <div className={styles.hueWrapper}>
+                            <ReactSlider
+                                className={styles.hueSlider}
+                                thumbClassName={styles.hueSliderThumb}
+                                min={0}
+                                max={359}
+                                value={selectedHue}
+                                onChange={(value, index) =>
+                                    setSelectedHue(parseInt(value))
+                                }
+                            />
+                        </div>
+                        <div className={styles.alphaWrapper}>
+                            <div className={styles.alphaCheckers}></div>
+                            <div
+                                className={styles.alphaGradient}
+                                style={{
+                                    background: `linear-gradient(to right, transparent, hsl(${selectedHue}, 100%, 50%))`,
+                                }}
+                            ></div>
 
-                    <ReactSlider
-                        className={styles.alphaSlider}
-                        thumbClassName={styles.alphaSliderThumb}
-                        min={0}
-                        max={255}
-                        value={selectedAlpha}
-                        onChange={(value, index) =>
-                            setSelectedAlpha(parseInt(value))
-                        }
-                    />
+                            <ReactSlider
+                                className={styles.alphaSlider}
+                                thumbClassName={styles.alphaSliderThumb}
+                                min={0}
+                                max={255}
+                                value={selectedAlpha}
+                                onChange={(value, index) =>
+                                    setSelectedAlpha(parseInt(value))
+                                }
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className={styles.bottomRow}>
@@ -250,9 +287,17 @@ function ColorPicker() {
                         ).toUpperCase()}
                         setValue={handleHexInputChange}
                         setAlpha={setSelectedAlpha}
+                        hexInputRef={hexInputRef}
                     />
-                    <div style={{ width: "1rem" }}>
-                        <CopyIcon />
+                    <div
+                        className={styles.copyIconWrapper}
+                        onClick={copyColorToClipboard}
+                    >
+                        {!justCopied ? (
+                            <CopyIcon />
+                        ) : (
+                            <CheckMark className={styles.checkIcon} />
+                        )}
                     </div>
                 </div>
             </div>
